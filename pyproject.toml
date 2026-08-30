@@ -8,7 +8,8 @@ dependencies = [
     "requests",
     "flask",
     "flask-socketio",
-    "flask-cors"
+    "flask-cors",
+    "dotenv"
 ]
 
 [project.optional-dependencies]

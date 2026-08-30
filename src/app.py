@@ -5,7 +5,7 @@ from chat.webhook import ChatWebhook
 
 from commands.router import CommandRouter
 from commands.status import StatusCommand
-
+import config
 
 def create_app():
 
@@ -16,8 +16,8 @@ def create_app():
     # -------------------------
 
     chat = ChatClient(
-        webhook_url="http://192.168.1.27:5000/webapi/entry.cgi?api=SYNO.Chat.External&method=chatbot&version=2&token=%22AJ8PmR7K8u5NhfIV2BnO3ve0sdK2ey0V8nSe7yTjtR1gr9Y9SLQCmsILxWZlA0ek%22"
-    )
+        webhook_url=config.AppConfig.SYNLOGY_CHAT_WEBHOOK_URL
+   )
 
     # -------------------------
     # Commands
