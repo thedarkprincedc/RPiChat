@@ -9,7 +9,9 @@ dependencies = [
     "flask",
     "flask-socketio",
     "flask-cors",
-    "dotenv"
+    "dotenv",
+    "yfinance",
+    "yt-dlp"
 ]
 
 [project.optional-dependencies]

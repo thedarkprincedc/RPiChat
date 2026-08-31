@@ -14,8 +14,9 @@ class CommandRouter:
         """Route an incoming message to the appropriate handler."""
 
         message = message.strip()
-        #logger.debug(user_id)
+
         logger.debug(f"msg: {message}, user_id: {user_id}")
+
         if not message:
             return "No command provided."
 
