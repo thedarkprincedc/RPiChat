@@ -6,9 +6,10 @@ from chat.webhook import ChatWebhook
 from commands.router import CommandRouter
 from commands.status import StatusCommand
 from commands.stocks import StocksCommand
-from commands.youtubedl import YoutubeDLCommand
+from commands.youtube import YoutubeCommand
 from services.stock_service import StockService
 from services.youtube_service import YoutubeService
+
 import config
 
 def create_app():
@@ -41,7 +42,7 @@ def create_app():
 
     router.register(
         "youtubedl",
-        YoutubeDLCommand(chat, YoutubeService())
+        YoutubeCommand(chat, YoutubeService())
     )
 
     # -------------------------

@@ -1,0 +1,11 @@
+services:
+  pi-chat:
+    build: .
+    container_name: pi-chat
+    restart: unless-stopped
+    volumes:
+      - ./output:/app/output
+    env_file:
+      - .env
+    ports:
+      - "8080:8080"
