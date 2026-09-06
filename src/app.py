@@ -9,8 +9,14 @@ from commands.stocks import StocksCommand
 from commands.youtube import YoutubeCommand
 from services.stock_service import StockService
 from services.youtube_service import YoutubeService
-
+from services.download_service import DownloadService
+from services.download_repository import DownloadRepository
 import config
+import logging
+from logging_config import setup_logging
+
+logger = logging.getLogger("app")
+
 
 def create_app():
 
@@ -22,7 +28,7 @@ def create_app():
 
     chat = ChatClient(
         webhook_url=config.AppConfig.SYNOLOGY_CHAT_WEBHOOK_URL
-   )
+    )
 
     # -------------------------
     # Commands
@@ -40,9 +46,20 @@ def create_app():
         StocksCommand(chat, StockService()),
     )
 
+    downloadRepository = DownloadRepository(config.AppConfig.OUTPUT_FILES / "db.sqlite")
+    downloadRepository.initialize()
+
+    youtubeService = YoutubeService(config.AppConfig.OUTPUT_FILES)
     router.register(
         "youtubedl",
-        YoutubeCommand(chat, YoutubeService())
+        YoutubeCommand(
+            "localhost:8080",
+            chat, 
+            DownloadService(
+                youtubeService,
+                downloadRepository
+            )
+        )
     )
 
     # -------------------------
@@ -54,9 +71,17 @@ def create_app():
     app.register_blueprint(
         webhook.blueprint
     )
+    
+    @app.route("/files/<download_id>")
+    def files(download_id):
+        row = downloadRepository.get(download_id)
 
-    @app.route("/files/<path:filename>")
-    def files(filename):
-        return send_from_directory(config.AppConfig.OUTPUT_FILES, filename)
+        if row is None:
+            return {"error": "Download not found"}, 404
 
+        return send_from_directory(
+            config.AppConfig.OUTPUT_FILES,
+            row['filename']
+        )
+   
     return app

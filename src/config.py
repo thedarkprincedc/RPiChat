@@ -11,7 +11,7 @@ class AppConfig:
     SYNOLOGY_URL = os.getenv("SYNOLOGY_URL")
     PORT = os.getenv("PORT") or 8080
     OUTPUT_FILES = os.getenv("OUTPUT_FILES") or Path("./output").resolve()
-
+    
     if not SYNOLOGY_CHAT_WEBHOOK_URL:
         print("Error: SYNOLOGY_CHAT_WEBHOOK_URL is missing from environment")
         sys.exit(1)

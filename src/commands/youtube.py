@@ -6,9 +6,10 @@ logger = logging.getLogger("youtube_dl_command")
 
 class YoutubeCommand:
 
-    def __init__(self, chat, youtubeService):
+    def __init__(self, host, chat, downloader):
+        self.host = host
         self.chat = chat
-        self.youtubeService = youtubeService
+        self.downloader = downloader
 
     def execute(self, args, user_id):
         url = args[0]
@@ -19,21 +20,16 @@ class YoutubeCommand:
             f"processing request...",
             user_id
         )
-        #payload={"text": "Check this!! <https://www.synology.com|Click here> for details!"}
-        result = self.youtubeService.download_video_by_url(url)
-        if result:
+       
+        file_id = self.downloader.download_youtube(url)
+        if file_id:
             self.chat.send(
-                self.format_download_complete(result['filename']),
+                self.format_download_complete(self.host, file_id),
                 user_id
             )
 
-    def format_download_complete(self, filename):
-        encoded_filename = quote(filename, safe="")
-        download_url = f"http://192.168.1.100:8080/files/{encoded_filename}"
-
+    def format_download_complete(self, ip_address, file_id):
         return (
-            "*Download Complete*\n"
-            f"*File:* `{filename}`\n"
-            "*Status:* Done\n\n"
-            f"<{download_url}|Download File>"
+            f"*Download Complete*\n"
+            f"<http://{ip_address}/files/{file_id}|Download File>"
         )
