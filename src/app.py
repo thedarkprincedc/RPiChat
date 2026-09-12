@@ -1,5 +1,4 @@
-from flask import Flask, send_from_directory, current_app
-from pathlib import Path
+from flask import Flask
 from chat.client import ChatClient
 from chat.webhook import ChatWebhook
 from commands.router import CommandRouter
@@ -71,15 +70,9 @@ def create_app(debug=None):
     # -------------------------
 
     webhook = ChatWebhook(router)
-
-    app.register_blueprint(
-        webhook.blueprint
-    )
-
+    app.register_blueprint(webhook.blueprint)
     app.register_blueprint(files_bp)
-
     check_dependencies(AppConfig, ["ffmpeg"])
-   
     return app
 
 def create_download_service(app, chat):
