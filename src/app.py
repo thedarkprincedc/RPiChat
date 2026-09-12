@@ -14,12 +14,25 @@ from services.download_repository import DownloadRepository
 import config
 import logging
 from logging_config import setup_logging
+import shutil
 
 logger = logging.getLogger("app")
 
+def check_dependencies(config):
+    dependencies = ["ffmpeg"]
+
+    for program in dependencies:
+        available = shutil.which(program)
+        if not available:
+            logger.warning(f"{program} dependency not found")
+        else:
+            logger.info(f"{program} dependency found")
+
+    if not config.SYNOLOGY_CHAT_WEBHOOK_URL:
+        raise RuntimeError("SYNOLOGY_CHAT_WEBHOOK_URL is not configured")
+    
 
 def create_app():
-
     app = Flask(__name__)
 
     # -------------------------
@@ -45,8 +58,8 @@ def create_app():
         "stocks",
         StocksCommand(chat, StockService()),
     )
-
-    downloadRepository = DownloadRepository(config.AppConfig.OUTPUT_FILES / "db.sqlite")
+    logger.info(config.AppConfig.SQLITE_PATH)
+    downloadRepository = DownloadRepository(config.AppConfig.SQLITE_PATH)
     downloadRepository.initialize()
 
     youtubeService = YoutubeService(config.AppConfig.OUTPUT_FILES)
@@ -75,13 +88,16 @@ def create_app():
     @app.route("/files/<download_id>")
     def files(download_id):
         row = downloadRepository.get(download_id)
-
+       
         if row is None:
             return {"error": "Download not found"}, 404
-
+        print(row['filename'])
+        print(config.AppConfig.OUTPUT_FILES)
         return send_from_directory(
             config.AppConfig.OUTPUT_FILES,
             row['filename']
         )
+
+    check_dependencies(config.AppConfig)
    
     return app
