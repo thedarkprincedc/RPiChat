@@ -14,6 +14,7 @@ import logging
 from logging_config import setup_logging
 import shutil
 from routes.files import files_bp
+from scheduler.service import SchedulerService
 
 logger = logging.getLogger("app")
 
@@ -43,13 +44,22 @@ def create_app(debug=None):
     app = Flask(__name__)
     app.config.from_object(AppConfig)
 
+    check_dependencies(
+        AppConfig, 
+        ["ffmpeg"]
+    )
+
     # -------------------------
-    # Clients / services
+    # Services
     # -------------------------
 
     chat = ChatClient(
         webhook_url=app.config["SYNOLOGY_CHAT_WEBHOOK_URL"]
     )
+
+    stock_service = StockService()
+
+    download_service = create_download_service(app, chat)
 
     # -------------------------
     # Commands
@@ -58,21 +68,49 @@ def create_app(debug=None):
     router = CommandRouter(chat)
 
     router.register("status", StatusCommand(chat))
+
     router.register("stocks", StocksCommand(chat, StockService()))
+
     router.register("youtubedl",
-        YoutubeCommand(app.config["RPI_SERVER_URL"],
-            create_download_service(app, chat)
+        YoutubeCommand(
+            app.config["RPI_SERVER_URL"],
+            download_service
         )
     )
 
     # -------------------------
-    # Webhook
+    # Webhook / routes
     # -------------------------
 
     webhook = ChatWebhook(router)
     app.register_blueprint(webhook.blueprint)
     app.register_blueprint(files_bp)
-    check_dependencies(AppConfig, ["ffmpeg"])
+
+    # -------------------------
+    # Scheduler
+    # ------------------------- 
+    
+    scheduler = SchedulerService()
+
+    scheduler.add_interval_job(
+        download_service.youtubeService.cleanup_downloads,
+        minutes=365,
+        job_id="cleanup-downloads",
+        kwargs={"max_age_days": 7},
+    )
+
+    scheduler.add_interval_job(
+        stock_service.stock_info_download,
+        minutes=60,
+        job_id="stock-update",
+        kwargs={
+            "tickers": ["AAPL"],
+            "output_path": app.config["RPI_OUTPUT_DIR"] / "stocks.csv"
+        },
+    )
+
+    scheduler.start()
+
     return app
 
 def create_download_service(app, chat):
@@ -84,11 +122,10 @@ def create_download_service(app, chat):
         app.config["RPI_SQLITE_PATH"]
     )
 
-    app.config["DOWNLOAD_REPOSITORY"] = repository
+    #app.config["DOWNLOAD_REPOSITORY"] = repository
 
     return DownloadService(
         youtube,
         repository,
         chat
     )
-    

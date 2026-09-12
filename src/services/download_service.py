@@ -3,7 +3,6 @@ from threading import Thread
 import logging
 from logging_config import setup_logging
 
-
 logger = logging.getLogger("youtube_dl_command")
 
 class DownloadService():

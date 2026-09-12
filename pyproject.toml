@@ -12,7 +12,8 @@ dependencies = [
     "dotenv",
     "yfinance",
     "yt-dlp",
-    "gunicorn"
+    "gunicorn",
+    "apscheduler"
 ]
 
 [project.optional-dependencies]
