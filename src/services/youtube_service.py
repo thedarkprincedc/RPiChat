@@ -30,14 +30,9 @@ class YoutubeService:
         
 
         if result.returncode != 0:
-            return None
+            logger.error("yt-dlp stderr: %s", result.stderr.strip())
+            raise RuntimeError("yt-dlp failed")
         
         filepath = result.stdout.strip()
-        #filename = Path(filepath).name
+        
         return Path(filepath)
-        #file_id = uuid.uuid4().hex
-
-        # return {
-        #     "file_id": file_id,
-        #     "filename": filename
-        # }

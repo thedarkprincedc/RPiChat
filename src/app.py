@@ -1,4 +1,4 @@
-from flask import Flask, send_from_directory
+from flask import Flask, send_from_directory, current_app
 from pathlib import Path
 from chat.client import ChatClient
 from chat.webhook import ChatWebhook
@@ -18,9 +18,7 @@ import shutil
 
 logger = logging.getLogger("app")
 
-def check_dependencies(config):
-    dependencies = ["ffmpeg"]
-
+def check_dependencies(config, dependencies):
     for program in dependencies:
         available = shutil.which(program)
         if not available:
@@ -44,13 +42,14 @@ def create_app(debug=None):
     logging.info(f"debug mode: {debug}")
 
     app = Flask(__name__)
+    app.config.from_object(AppConfig)
 
     # -------------------------
     # Clients / services
     # -------------------------
 
     chat = ChatClient(
-        webhook_url=AppConfig.SYNOLOGY_CHAT_WEBHOOK_URL
+        webhook_url=app.config["SYNOLOGY_CHAT_WEBHOOK_URL"]
     )
 
     # -------------------------
@@ -68,19 +67,22 @@ def create_app(debug=None):
         "stocks",
         StocksCommand(chat, StockService()),
     )
-    logger.info(AppConfig.RPI_SQLITE_PATH)
-    downloadRepository = DownloadRepository(AppConfig.RPI_SQLITE_PATH)
+
+    #logger.info(AppConfig.RPI_SQLITE_PATH)
+
+    downloadRepository = DownloadRepository(app.config["RPI_SQLITE_PATH"])
     downloadRepository.initialize()
 
-    youtubeService = YoutubeService(AppConfig.RPI_OUTPUT_DIR)
+    youtubeService = YoutubeService(app.config["RPI_OUTPUT_DIR"])
     router.register(
         "youtubedl",
         YoutubeCommand(
-            AppConfig.RPI_SERVER_URL,
+            app.config["RPI_SERVER_URL"],
             chat, 
             DownloadService(
                 youtubeService,
-                downloadRepository
+                downloadRepository,
+                chat
             )
         )
     )
@@ -102,18 +104,18 @@ def create_app(debug=None):
         if row is None:
             return {"error": "Download not found"}, 404
 
-        file_path = Path(AppConfig.RPI_OUTPUT_DIR) / row["filename"]
+        file_path = Path(app.config["RPI_OUTPUT_DIR"]) / row["filename"]
 
         if not file_path.is_file():
             return {"error": "File not found"}, 404
       
         return send_from_directory(
-            AppConfig.RPI_OUTPUT_DIR,
+            app.config["RPI_OUTPUT_DIR"],
             row['filename'],
             as_attachment=True,
             download_name=row["filename"]
         )
 
-    check_dependencies(AppConfig)
+    check_dependencies(AppConfig, ["ffmpeg"])
    
     return app

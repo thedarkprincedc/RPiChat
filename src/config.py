@@ -10,7 +10,6 @@ class AppConfig:
     # variables
     SYNOLOGY_CHAT_WEBHOOK_URL = os.getenv("SYNOLOGY_CHAT_WEBHOOK_URL")
     SYNOLOGY_URL = os.getenv("SYNOLOGY_URL")
-    # 
     RPI_PORT = os.getenv("PORT") or 8080
     RPI_SERVER_URL = f"localhost:{RPI_PORT}"
     # directories

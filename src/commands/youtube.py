@@ -13,24 +13,14 @@ class YoutubeCommand:
 
     def execute(self, args, user_id):
         url = args[0]
+
         if not url:
-            logger.error("not eeeee")
-        logging.debug(args)
+           logger.error("No YouTube URL provided")
+           return
+        
         self.chat.send(
-            f"processing request...",
+            f"Processing request...",
             user_id
         )
-       
-        file_id = self.downloader.download_youtube(url)
-        
-        if file_id:
-            self.chat.send(
-                self.format_download_complete(self.host, file_id),
-                user_id
-            )
 
-    def format_download_complete(self, ip_address, file_id):
-        return (
-            f"*Download Complete*\n"
-            f"<http://{ip_address}/files/{file_id}|Download File>"
-        )
+        self.downloader.download_youtube(url, user_id)

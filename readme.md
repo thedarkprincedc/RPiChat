@@ -1,6 +1,6 @@
 # PIChatBot
 
-
+Chat Bot for Synology Chat Client, provides local ai, youtubedl and other tools via command line
 
 Create Virtual Environment 
 ```bash
