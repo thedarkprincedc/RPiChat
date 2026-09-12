@@ -16,4 +16,4 @@ RUN pip install --no-cache-dir .
 
 EXPOSE 8080
 
-CMD ["python", "-m", "src.main"]
+CMD ["gunicorn", "--bind", "0.0.0.0:8080", "src.app:create_app()"]

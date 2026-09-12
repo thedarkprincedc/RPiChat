@@ -1,5 +1,5 @@
 from flask import Flask, send_from_directory
-
+from pathlib import Path
 from chat.client import ChatClient
 from chat.webhook import ChatWebhook
 
@@ -11,7 +11,7 @@ from services.stock_service import StockService
 from services.youtube_service import YoutubeService
 from services.download_service import DownloadService
 from services.download_repository import DownloadRepository
-import config
+from .config import AppConfig
 import logging
 from logging_config import setup_logging
 import shutil
@@ -32,7 +32,17 @@ def check_dependencies(config):
         raise RuntimeError("SYNOLOGY_CHAT_WEBHOOK_URL is not configured")
     
 
-def create_app():
+def create_app(debug=None):
+    if debug is None:
+        debug = AppConfig.DEBUG
+
+    setup_logging(
+        log_file="logs/main.log", 
+        console_level=logging.DEBUG if debug else logging.INFO
+    )
+
+    logging.info(f"debug mode: {debug}")
+
     app = Flask(__name__)
 
     # -------------------------
@@ -40,7 +50,7 @@ def create_app():
     # -------------------------
 
     chat = ChatClient(
-        webhook_url=config.AppConfig.SYNOLOGY_CHAT_WEBHOOK_URL
+        webhook_url=AppConfig.SYNOLOGY_CHAT_WEBHOOK_URL
     )
 
     # -------------------------
@@ -58,15 +68,15 @@ def create_app():
         "stocks",
         StocksCommand(chat, StockService()),
     )
-    logger.info(config.AppConfig.SQLITE_PATH)
-    downloadRepository = DownloadRepository(config.AppConfig.SQLITE_PATH)
+    logger.info(AppConfig.RPI_SQLITE_PATH)
+    downloadRepository = DownloadRepository(AppConfig.RPI_SQLITE_PATH)
     downloadRepository.initialize()
 
-    youtubeService = YoutubeService(config.AppConfig.OUTPUT_FILES)
+    youtubeService = YoutubeService(AppConfig.RPI_OUTPUT_DIR)
     router.register(
         "youtubedl",
         YoutubeCommand(
-            "localhost:8080",
+            AppConfig.RPI_SERVER_URL,
             chat, 
             DownloadService(
                 youtubeService,
@@ -91,13 +101,19 @@ def create_app():
        
         if row is None:
             return {"error": "Download not found"}, 404
-        print(row['filename'])
-        print(config.AppConfig.OUTPUT_FILES)
+
+        file_path = Path(AppConfig.RPI_OUTPUT_DIR) / row["filename"]
+
+        if not file_path.is_file():
+            return {"error": "File not found"}, 404
+      
         return send_from_directory(
-            config.AppConfig.OUTPUT_FILES,
-            row['filename']
+            AppConfig.RPI_OUTPUT_DIR,
+            row['filename'],
+            as_attachment=True,
+            download_name=row["filename"]
         )
 
-    check_dependencies(config.AppConfig)
+    check_dependencies(AppConfig)
    
     return app

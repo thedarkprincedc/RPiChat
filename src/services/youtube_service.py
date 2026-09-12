@@ -15,6 +15,7 @@ class YoutubeService:
             [
                 "yt-dlp",
                 "--quiet", "--no-warnings",
+                "--restrict-filenames",
                 "--paths", f"home:{self.output_dir}",
                 "--paths", "temp:./incomplete",
                 "-o", "%(title)s.%(ext)s",

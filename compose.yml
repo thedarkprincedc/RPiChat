@@ -1,7 +1,7 @@
 services:
-  pi-chat:
+  pichat:
     build: .
-    container_name: pi-chat
+    container_name: pichat
     restart: unless-stopped
     volumes:
       - ./output:/app/output

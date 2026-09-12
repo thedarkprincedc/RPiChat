@@ -1,10 +1,6 @@
 import argparse
-import logging
-from logging_config import setup_logging
 from app import create_app
-import config
-
-logger = logging.getLogger("main")
+from .config import AppConfig
 
 def main():
     parser = argparse.ArgumentParser()
@@ -17,16 +13,11 @@ def main():
 
     args = parser.parse_args()
 
-    setup_logging(
-        log_file="logs/main.log", 
-        console_level=logging.DEBUG if args.debug else logging.INFO
-    )
-
-    app = create_app()
+    app = create_app(args.debug)
 
     app.run(
         host="0.0.0.0",
-        port=config.AppConfig.PORT
+        port=AppConfig.RPI_PORT
     )
 
 if __name__ == "__main__":

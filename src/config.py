@@ -7,21 +7,23 @@ load_dotenv()
 
 class AppConfig:
     """A central hub for all project configurations."""
-
     # variables
     SYNOLOGY_CHAT_WEBHOOK_URL = os.getenv("SYNOLOGY_CHAT_WEBHOOK_URL")
     SYNOLOGY_URL = os.getenv("SYNOLOGY_URL")
-    PORT = os.getenv("PORT") or 8080
-    OUTPUT_FILES = os.getenv("OUTPUT_FILES") or Path("./output").resolve()
-    SQLITE_PATH = OUTPUT_FILES / "db.sqlite"
+    # 
+    RPI_PORT = os.getenv("PORT") or 8080
+    RPI_SERVER_URL = f"localhost:{RPI_PORT}"
+    # directories
+    RPI_OUTPUT_DIR = os.getenv("OUTPUT_DIR") or Path("./output").resolve()
+    RPI_DATA_DIR = os.getenv("DATA_DIR") or Path("./data").resolve()
+    RPI_LOG_DIR = os.getenv("LOG_DIR") or Path("./logs").resolve()
+    # paths
+    RPI_SQLITE_PATH = os.getenv("SQLITE_PATH") or RPI_DATA_DIR / "db.sqlite"
+    RPI_LOG_PATH = os.getenv("LOG_PATH") or RPI_LOG_DIR / "main.log"
+
+    DEBUG = os.getenv("DEBUG", "false").lower() == "true"
 
     # scripts
-    OUTPUT_FILES.mkdir(parents=True, exist_ok=True)
-    
-    # if not SYNOLOGY_CHAT_WEBHOOK_URL:
-    #     print("Error: SYNOLOGY_CHAT_WEBHOOK_URL is missing from environment")
-    #     sys.exit(1)
-
-    #API_KEY = os.getenv("API_KEY")
-    #DB_URL = os.getenv("DATABASE_URL")
-    #DEBUG = os.getenv("DEBUG_MODE", "False") == "True"
+    RPI_OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
+    RPI_DATA_DIR.mkdir(parents=True, exist_ok=True)
+    RPI_LOG_DIR.mkdir(parents=True, exist_ok=True)

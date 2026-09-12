@@ -11,7 +11,8 @@ dependencies = [
     "flask-cors",
     "dotenv",
     "yfinance",
-    "yt-dlp"
+    "yt-dlp",
+    "gunicorn"
 ]
 
 [project.optional-dependencies]

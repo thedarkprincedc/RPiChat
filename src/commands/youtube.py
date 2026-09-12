@@ -22,6 +22,7 @@ class YoutubeCommand:
         )
        
         file_id = self.downloader.download_youtube(url)
+        
         if file_id:
             self.chat.send(
                 self.format_download_complete(self.host, file_id),
