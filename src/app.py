@@ -11,7 +11,7 @@ from services.stock_service import StockService
 from services.youtube_service import YoutubeService
 from services.download_service import DownloadService
 from services.download_repository import DownloadRepository
-from .config import AppConfig
+from config import AppConfig
 import logging
 from logging_config import setup_logging
 import shutil

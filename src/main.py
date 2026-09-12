@@ -1,6 +1,6 @@
 import argparse
 from app import create_app
-from .config import AppConfig
+from config import AppConfig
 
 def main():
     parser = argparse.ArgumentParser()
