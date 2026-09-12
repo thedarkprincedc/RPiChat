@@ -2,7 +2,6 @@ from flask import Flask, send_from_directory, current_app
 from pathlib import Path
 from chat.client import ChatClient
 from chat.webhook import ChatWebhook
-
 from commands.router import CommandRouter
 from commands.status import StatusCommand
 from commands.stocks import StocksCommand
@@ -15,6 +14,7 @@ from config import AppConfig
 import logging
 from logging_config import setup_logging
 import shutil
+from routes.files import files_bp
 
 logger = logging.getLogger("app")
 
@@ -56,34 +56,13 @@ def create_app(debug=None):
     # Commands
     # -------------------------
 
-    router = CommandRouter()
+    router = CommandRouter(chat)
 
-    router.register(
-        "status",
-        StatusCommand(chat),
-    )
-
-    router.register(
-        "stocks",
-        StocksCommand(chat, StockService()),
-    )
-
-    #logger.info(AppConfig.RPI_SQLITE_PATH)
-
-    downloadRepository = DownloadRepository(app.config["RPI_SQLITE_PATH"])
-    downloadRepository.initialize()
-
-    youtubeService = YoutubeService(app.config["RPI_OUTPUT_DIR"])
-    router.register(
-        "youtubedl",
-        YoutubeCommand(
-            app.config["RPI_SERVER_URL"],
-            chat, 
-            DownloadService(
-                youtubeService,
-                downloadRepository,
-                chat
-            )
+    router.register("status", StatusCommand(chat))
+    router.register("stocks", StocksCommand(chat, StockService()))
+    router.register("youtubedl",
+        YoutubeCommand(app.config["RPI_SERVER_URL"],
+            create_download_service(app, chat)
         )
     )
 
@@ -96,26 +75,27 @@ def create_app(debug=None):
     app.register_blueprint(
         webhook.blueprint
     )
-    
-    @app.route("/files/<download_id>")
-    def files(download_id):
-        row = downloadRepository.get(download_id)
-       
-        if row is None:
-            return {"error": "Download not found"}, 404
 
-        file_path = Path(app.config["RPI_OUTPUT_DIR"]) / row["filename"]
-
-        if not file_path.is_file():
-            return {"error": "File not found"}, 404
-      
-        return send_from_directory(
-            app.config["RPI_OUTPUT_DIR"],
-            row['filename'],
-            as_attachment=True,
-            download_name=row["filename"]
-        )
+    app.register_blueprint(files_bp)
 
     check_dependencies(AppConfig, ["ffmpeg"])
    
     return app
+
+def create_download_service(app, chat):
+    youtube = YoutubeService(
+        app.config["RPI_OUTPUT_DIR"]
+    )
+
+    repository = DownloadRepository(
+        app.config["RPI_SQLITE_PATH"]
+    )
+
+    app.config["DOWNLOAD_REPOSITORY"] = repository
+
+    return DownloadService(
+        youtube,
+        repository,
+        chat
+    )
+    

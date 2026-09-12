@@ -4,6 +4,7 @@ import sqlite3
 class DownloadRepository():
     def __init__(self, database):
         self.database = Path(database)
+        self.initialize()
 
     def initialize(self):
         with sqlite3.connect(self.database) as conn:

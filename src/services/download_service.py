@@ -10,8 +10,8 @@ class DownloadService():
     def __init__(self, youtubeService, downloadRepository, chat):
         self.youtubeService = youtubeService
         self.repository = downloadRepository
-        self.host = "localhost:8080"
         self.chat = chat
+        self.host = "localhost:8080"
 
     def download_youtube(self, url, user_id):
         thread = Thread(
@@ -23,6 +23,11 @@ class DownloadService():
 
     def _download_youtube(self, url, user_id):
         try:
+            self.chat.send(
+                f"Processing request...",
+                user_id
+            )
+
             download_id = uuid.uuid4().hex
             file_id = self.repository.create(
                 download_id=download_id,
